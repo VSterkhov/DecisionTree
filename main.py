@@ -1,32 +1,20 @@
-
-import sklearn.datasets as ds
-
 from sklearn.model_selection import train_test_split 
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import r2_score
+from sklearn.tree import DecisionTreeRegressor
+from sklearn import tree
+from sklearn.model_selection import GridSearchCV
 
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import math
-
-from sklearn.tree import DecisionTreeRegressor
-from sklearn import tree
+import sklearn.datasets as ds
 
 # Проверяем наличие выбросов целевой переменной
 def show_boxplot(df, columns=[]):
     df = df.loc[:, columns]
     sns.boxplot(x="variable", y="value", data=pd.melt(df))    
     plt.figure(figsize=(16,9))
-    plt.show()
-    
-
-# Выводим корреляционную матрицу
-def show_correlation_map(df):
-    cor = calif_df.corr()
-    plt.figure(figsize=(16,9))
-    sns.heatmap(cor, center=0, cmap="winter", annot = True)
     plt.show()
 
 california_bunch = ds.fetch_california_housing()
@@ -38,9 +26,6 @@ calif_df = pd.DataFrame(data, columns=columns)
 corr = calif_df['Population'].corr(calif_df['MedHouseVal'])
 print('Correlation \'Population\' to Target: ',corr)
 show_boxplot(calif_df, ['Population'])
-
-print('var: ', calif_df['Population'].var())
-
 calif_df['Population'] = calif_df['Population'].median()
 
 
@@ -77,6 +62,12 @@ _ = tree.plot_tree(clf,
                    class_names=california_bunch.target_names,
                    filled=True)
 
-clf = DecisionTreeRegressor(max_depth=5)
+parametrs = { 'max_depth': range (1,13, 2),
+              'min_samples_leaf': range (1,8),
+              'min_samples_split': range (2,10,2) }
+
+clf = GridSearchCV(DecisionTreeRegressor(), parametrs, cv=5)
 clf.fit(X_train, Y_train)
-print('Score decision tree. Depth=5: ', clf.score(X_test, Y_test))
+best_params = clf.best_params_
+print('Best params for decision tree: ', best_params)
+print('Score best params decision tree: ', clf.score(X_test, Y_test))
